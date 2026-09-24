@@ -15,6 +15,7 @@ let state = { ...defaultState, ...JSON.parse(localStorage.getItem("crab-race-sta
 let language = localStorage.getItem("crab-race-language") || "vi";
 let crabSearch = "";
 let stream;
+let roomSyncTimer;
 let raceViewTimer;
 let toastTimer;
 const app = document.querySelector("#app");
@@ -57,13 +58,6 @@ function applyDlicomCopy() {
   textNodes.forEach((node) => { if (node.parentElement?.closest(".player-name, .winner-owner, .result-owner")) return; node.nodeValue = dlicomCopyReplacements.reduce((result, [from, to]) => result.split(from).join(to), node.nodeValue); });
 }
 
-function applyDeappCopy() {
-  const walker = document.createTreeWalker(document.querySelector("#app"), NodeFilter.SHOW_TEXT);
-  const textNodes = [];
-  while (walker.nextNode()) textNodes.push(walker.currentNode);
-  textNodes.forEach((node) => { if (node.parentElement?.closest(".player-name, .winner-owner, .result-owner")) return; node.nodeValue = node.nodeValue.replace(/DLICOM/g, "DEAPP").replace(/Dlicom/g, "deapp").replace(/dlicom/g, "deapp"); });
-}
-
 function updateChromeLanguage() {
   const connection = document.querySelector(".connection-pill");
   const help = document.querySelector(".icon-button");
@@ -99,6 +93,13 @@ function applySnapshot(payload, forceRender = false) {
 
 function connectStream() {
   if (stream) stream.close();
+  clearInterval(roomSyncTimer);
+  if (location.protocol === "https:") {
+    const sync = async () => { try { applySnapshot(await api(`/api/rooms/${encodeURIComponent(state.roomCode)}?session=${encodeURIComponent(state.sessionId)}`)); } catch { /* retry on the next poll */ } };
+    sync();
+    roomSyncTimer = setInterval(sync, 1000);
+    return;
+  }
   stream = new EventSource(`/api/stream?code=${encodeURIComponent(state.roomCode)}&session=${encodeURIComponent(state.sessionId)}`);
   stream.onmessage = (event) => { try { applySnapshot(JSON.parse(event.data)); } catch { /* ignore malformed event */ } };
 }
@@ -111,7 +112,6 @@ function render() {
   if (state.screen === "results") renderResults();
   applyDlicomCopy();
   translateDocument();
-  applyDeappCopy();
   updateChromeLanguage();
 }
 
@@ -161,7 +161,7 @@ function updateRaceVisuals() { const race = state.room?.race; if (!race) return;
 function renderResults() { const lanes = state.room?.race?.lanes || []; const winner = lanes[0] || crab(state.selectedCrab); const wins = state.room?.wins?.[state.nickname] || 0; app.innerHTML = `<section><div class="screen-header"><div><div class="eyebrow">CỜ VỀ ĐÍCH ĐÃ HẠ · ĐỒNG BỘ XONG</div><h1>Một màn <em>kịch tính.</em></h1></div><div class="room-badge"><span>MÃ PHÒNG</span><strong>${escapeHtml(state.roomCode)}</strong><button class="copy-button" data-action="copy">Sao chép</button></div></div><div class="results-layout"><div class="winner-card" style="--crab-color:${winner.color}"><span class="winner-label">🏆 VUA BÃI BIỂN</span><span class="winner-emoji">${crabImage(winner.name)}</span><span class="winner-crab-number">#${String(winner.number).padStart(2, "0")}</span><h2>${winner.name}</h2><p class="winner-owner">Về nhất cho ${escapeHtml(winner.owner)}</p></div><div class="results-side"><section class="panel results-table"><div class="panel-title"><h2>Thứ tự về đích</h2><span>${lanes.length} cua</span></div>${lanes.map((lane, index) => `<div class="result-row"><span class="rank">${String(index + 1).padStart(2, "0")}</span><div><div class="result-name"><span class="result-mini-crab" style="--crab-color:${lane.color}">${crabImage(lane.name)}</span><strong>#${String(lane.number).padStart(2, "0")} ${lane.name}</strong></div><div class="result-owner">${escapeHtml(lane.owner)}</div></div><span class="finish-time">00:${String(Math.floor((lane.finishTime || 22000) / 1000)).padStart(2, "0")}</span></div>`).join("")}</section><div class="wins-card"><span>Thắng của ${escapeHtml(state.nickname)} trong phòng</span><strong>${wins}</strong></div><div class="results-actions"><button class="secondary-button" data-action="lobby">Đổi cua</button>${state.isHost ? `<button class="primary-button" data-action="replay">Đua lại →</button>` : `<button class="secondary-button" disabled>Chờ host đua lại</button>`}</div></div></div></section>`; document.querySelector("[data-action='copy']").addEventListener("click", copyRoom); document.querySelector("[data-action='lobby']").addEventListener("click", resetRoom); document.querySelector("[data-action='replay']")?.addEventListener("click", resetRoom); }
 
 function toast(message) { const element = document.querySelector("#toast"); element.textContent = message; element.classList.add("show"); clearTimeout(toastTimer); toastTimer = setTimeout(() => element.classList.remove("show"), 2600); }
-document.addEventListener("click", (event) => { const action = event.target.closest("[data-action]")?.dataset.action; if (action === "home") { if (stream) stream.close(); state = { ...defaultState }; persist(); render(); } if (action === "help") { app.innerHTML = `<div class="help-popover"><div class="eyebrow">CRAB RACE</div><h2>Luật chơi siêu ngắn</h2><p>Chọn một chú cua, bật sẵn sàng rồi để các chú cua tự chạy. Các làn trống sẽ do BOT điều khiển. Trận đấu kết thúc sau khoảng 20–30 giây — cua về đích đầu tiên là người thắng.</p><button class="secondary-button" data-action="home">Về trang đầu</button></div>`; applyDlicomCopy(); translateDocument(); applyDeappCopy(); updateChromeLanguage(); } });
+document.addEventListener("click", (event) => { const action = event.target.closest("[data-action]")?.dataset.action; if (action === "home") { if (stream) stream.close(); clearInterval(roomSyncTimer); state = { ...defaultState }; persist(); render(); } if (action === "help") { app.innerHTML = `<div class="help-popover"><div class="eyebrow">CRAB RACE</div><h2>Luật chơi siêu ngắn</h2><p>Chọn một chú cua, bật sẵn sàng rồi để các chú cua tự chạy. Các làn trống sẽ do BOT điều khiển. Trận đấu kết thúc sau khoảng 20–30 giây — cua về đích đầu tiên là người thắng.</p><button class="secondary-button" data-action="home">Về trang đầu</button></div>`; applyDlicomCopy(); translateDocument(); updateChromeLanguage(); } });
 
 const languageSelect = document.querySelector("#language-select");
 languageSelect.value = language;

@@ -16,8 +16,10 @@ const CRAB_PRESETS = [
 ];
 const CRAB_COLORS = ["#65e0d1", "#ffb45c", "#ff7b87", "#8db8ff", "#c795ff", "#7de0a0", "#f3d36b", "#7ed7e8"];
 const CRABS = [...CRAB_PRESETS, ...Array.from({ length: 94 }, (_, index) => { const number = index + 7; return { id: `crab-${number}`, name: `Coral ${String(number).padStart(2, "0")}`, color: CRAB_COLORS[index % CRAB_COLORS.length], emoji: "🦀", number }; })];
-const rooms = new Map();
-const subscribers = new Map();
+const runtime = globalThis.__DLICOM_GAME_RUNTIME__ || { rooms: new Map(), subscribers: new Map() };
+globalThis.__DLICOM_GAME_RUNTIME__ = runtime;
+const rooms = runtime.rooms;
+const subscribers = runtime.subscribers;
 const now = () => Date.now();
 const makeId = (bytes = 8) => crypto.randomBytes(bytes).toString("hex");
 const makeCode = () => crypto.randomBytes(3).toString("hex").toUpperCase();
@@ -70,7 +72,7 @@ function updateRace(room) {
   broadcast(room);
 }
 
-setInterval(() => { for (const room of rooms.values()) { if (room.phase === "countdown" || room.phase === "racing") updateRace(room); if (now() - room.lastActivity > 60 * 60 * 1000) rooms.delete(room.code); } }, 250);
+function tickRooms() { for (const room of rooms.values()) { if (room.phase === "countdown" || room.phase === "racing") updateRace(room); if (now() - room.lastActivity > 60 * 60 * 1000) rooms.delete(room.code); } }
 
 function subscribe(req, res, code, sessionId) {
   const room = getRoom(code); const player = getPlayer(room, sessionId);
@@ -86,7 +88,8 @@ function serveStatic(req, res) {
   const types = { ".html": "text/html; charset=utf-8", ".js": "text/javascript; charset=utf-8", ".css": "text/css; charset=utf-8", ".md": "text/plain; charset=utf-8" }; res.writeHead(200, { "content-type": types[path.extname(filePath)] || "application/octet-stream", "cache-control": "no-store" }); fs.createReadStream(filePath).pipe(res);
 }
 
-const server = http.createServer(async (req, res) => {
+async function requestHandler(req, res) {
+  tickRooms();
   const parsed = new URL(req.url, `http://${req.headers.host}`); const parts = parsed.pathname.split("/").filter(Boolean);
   if (req.method === "GET" && parts[0] === "api" && parts[1] === "stream") { subscribe(req, res, parsed.searchParams.get("code"), parsed.searchParams.get("session")); return; }
   if (parts[0] === "api" && parts[1] === "rooms") {
@@ -102,6 +105,11 @@ const server = http.createServer(async (req, res) => {
     if (req.method === "POST" && action === "reset") { if (room.hostSessionId !== sessionId) { sendError(res, 403, "Chỉ host mới có thể đua lại"); return; } room.phase = "lobby"; room.race = null; room.players.forEach((item) => { item.ready = false; item.crab = null; }); broadcast(room); sendJson(res, 200, snapshot(room, sessionId)); return; }
   }
   serveStatic(req, res);
-});
+}
 
-server.listen(PORT, "0.0.0.0", () => console.log(`Crab Race running at http://localhost:${PORT}`));
+if (require.main === module) {
+  setInterval(tickRooms, 250);
+  http.createServer(requestHandler).listen(PORT, "0.0.0.0", () => console.log(`Crab Race running at http://localhost:${PORT}`));
+}
+
+module.exports = requestHandler;
