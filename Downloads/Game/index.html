@@ -1,0 +1,35 @@
+<!doctype html>
+<html lang="vi">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="theme-color" content="#071a35" />
+    <title>Crab Race — Đua cua cùng hội bạn</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Space+Grotesk:wght@400;500;600;700&display=swap" rel="stylesheet" />
+    <link rel="stylesheet" href="styles.css" />
+  </head>
+  <body>
+    <div class="app-shell">
+      <div class="noise" aria-hidden="true"></div>
+      <header class="topbar">
+        <button class="brand" data-action="home" aria-label="Về trang chủ">
+          <span class="brand-mark">🦀</span>
+          <span>CRAB<span class="brand-accent">RACE</span></span>
+        </button>
+        <div class="topbar-right">
+          <span class="connection-pill"><i></i> MÔ PHỎNG LOCAL</span>
+          <button class="icon-button" data-action="help" aria-label="Trợ giúp">?</button>
+        </div>
+      </header>
+
+      <main id="app" class="main-content"></main>
+
+      <footer class="footer-note">Một cuộc đua nhỏ, một câu chuyện lớn.</footer>
+    </div>
+
+    <div id="toast" class="toast" role="status" aria-live="polite"></div>
+    <script src="app.js"></script>
+  </body>
+</html>
