@@ -17,5 +17,6 @@ Chạy `node server.js`, sau đó mở `http://localhost:4173` trên các thiế
 - Responsive cho điện thoại, có hỗ trợ `prefers-reduced-motion`.
 - Bộ chọn ngôn ngữ Việt / English, lưu lựa chọn trên trình duyệt.
 - Dùng asset `crab.png` làm hình chú cua trong lobby, đường đua và kết quả.
+- Dùng asset `deapp-logo.png` làm logo và biểu trưng deapp trên toàn bộ giao diện.
 
 Để test hai thiết bị trong cùng Wi‑Fi, máy chạy server cần cho phép cổng `4173` qua firewall và thiết bị còn lại truy cập bằng địa chỉ IP LAN của máy đó, ví dụ `http://192.168.1.20:4173`. Dữ liệu hiện lưu trong RAM nên sẽ mất khi restart server.
