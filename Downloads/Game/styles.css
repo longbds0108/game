@@ -7,9 +7,9 @@
   --navy-800: #0d2546;
   --line: rgba(143, 179, 221, 0.16);
   --panel: rgba(13, 37, 70, 0.74);
-  --coral: #ff6e5d;
-  --coral-soft: #ff9b73;
-  --aqua: #65e0d1;
+  --coral: #7868ff;
+  --coral-soft: #b5a8ff;
+  --aqua: #52d6ff;
   --yellow: #f7c85c;
   --purple: #b887ff;
   --orange: #ff995a;
@@ -30,7 +30,7 @@ body {
   min-height: 100vh;
   background:
     radial-gradient(circle at 11% 8%, rgba(101, 224, 209, .12), transparent 29rem),
-    radial-gradient(circle at 89% 20%, rgba(255, 110, 93, .12), transparent 27rem),
+    radial-gradient(circle at 89% 20%, rgba(120, 104, 255, .16), transparent 27rem),
     linear-gradient(130deg, #061329, #091b36 55%, #08182f);
 }
 
@@ -45,6 +45,7 @@ button:focus-visible, input:focus-visible { outline: 3px solid rgba(101, 224, 20
 .brand { display: inline-flex; align-items: center; gap: 10px; border: 0; color: var(--ink); background: none; padding: 0; font-size: 17px; font-weight: 700; letter-spacing: .14em; }
 .brand-mark { display: grid; place-items: center; width: 34px; height: 34px; border: 1px solid rgba(255, 155, 115, .6); border-radius: 10px; background: rgba(255, 110, 93, .16); font-size: 19px; transform: rotate(-7deg); }
 .brand-accent { color: var(--coral); }
+.brand-suffix { color: var(--muted); font-size: 11px; letter-spacing: .03em; }
 .topbar-right { display: flex; align-items: center; gap: 14px; }
 .connection-pill { display: inline-flex; align-items: center; gap: 8px; color: var(--muted); font: 500 11px "DM Mono", monospace; letter-spacing: .08em; }
 .connection-pill i { width: 7px; height: 7px; border-radius: 50%; background: var(--aqua); box-shadow: 0 0 14px var(--aqua); }
@@ -69,7 +70,7 @@ h1 em { color: var(--coral); font-style: normal; }
 .home-copy { padding: 18px 0 48px; }
 .home-actions { display: grid; grid-template-columns: minmax(0, 1.1fr) minmax(0, .9fr); gap: 13px; max-width: 530px; margin-top: 34px; }
 .action-card { min-height: 176px; padding: 22px; border: 1px solid var(--line); border-radius: 20px; background: linear-gradient(145deg, rgba(20, 53, 92, .88), rgba(9, 27, 53, .86)); box-shadow: var(--shadow); }
-.action-card.primary { border-color: rgba(255, 110, 93, .48); background: linear-gradient(145deg, rgba(116, 50, 64, .9), rgba(29, 42, 70, .95)); }
+.action-card.primary { border-color: rgba(120, 104, 255, .52); background: linear-gradient(145deg, rgba(69, 52, 132, .9), rgba(29, 32, 70, .95)); }
 .action-card h2 { margin-bottom: 8px; font-size: 20px; letter-spacing: -.03em; }
 .action-card p { margin-bottom: 18px; color: var(--muted); font-size: 13px; line-height: 1.45; }
 .capacity-field { display: grid; grid-template-columns: 1fr auto; align-items: center; gap: 10px; margin-top: 9px; color: var(--muted); font-size: 12px; }
@@ -100,7 +101,8 @@ h1 em { color: var(--coral); font-style: normal; }
 .mini-name { color: var(--muted); font: 10px "DM Mono", monospace; text-transform: uppercase; }
 .mini-line { position: relative; height: 32px; border: 1px solid rgba(143, 179, 221, .12); border-radius: 8px; background: repeating-linear-gradient(135deg, rgba(255,255,255,.025) 0 8px, transparent 8px 16px), rgba(3, 16, 33, .58); overflow: hidden; }
 .mini-line::after { content: ""; position: absolute; right: 11px; top: 0; bottom: 0; width: 2px; border-left: 2px dashed rgba(255,255,255,.27); }
-.mini-crab { position: absolute; left: var(--pos); top: 1px; z-index: 1; font-size: 24px; transition: left 1s ease; }
+.mini-crab { position: absolute; left: var(--pos); top: 0; z-index: 1; width: 38px; height: 31px; transition: left 1s ease; transform: translateX(-50%); }
+.mini-crab img, .crab-emoji img, .race-crab img, .result-mini-crab img, .winner-emoji img { display: block; width: 100%; height: 100%; object-fit: contain; }
 .mini-number { color: var(--muted-2); font: 10px "DM Mono", monospace; text-align: right; }
 .preview-caption { position: absolute; right: 26px; bottom: 24px; left: 26px; display: flex; justify-content: space-between; align-items: end; }
 .preview-caption strong { display: block; max-width: 230px; font-size: 24px; line-height: 1.08; letter-spacing: -.04em; }
@@ -126,8 +128,9 @@ h1 em { color: var(--coral); font-style: normal; }
 .crab-card:hover { transform: translateY(-2px); border-color: rgba(255, 255, 255, .28); }
 .crab-card.selected { border-color: var(--crab-color); background: linear-gradient(145deg, color-mix(in srgb, var(--crab-color) 18%, transparent), rgba(4, 18, 39, .62)); box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--crab-color) 28%, transparent); }
 .crab-card.taken { opacity: .46; cursor: not-allowed; }
-.crab-avatar { display: flex; align-items: center; justify-content: space-between; }
-.crab-emoji { font-size: 31px; filter: drop-shadow(0 6px 8px rgba(0,0,0,.22)); }
+.crab-avatar { position: relative; display: flex; align-items: center; justify-content: space-between; }
+.crab-emoji { display: block; width: 56px; height: 49px; filter: drop-shadow(0 6px 8px rgba(0,0,0,.22)); }
+.crab-number { position: absolute; top: -2px; left: 42px; min-width: 25px; padding: 3px 5px; border: 1px solid var(--crab-color); border-radius: 6px; color: var(--crab-color); background: rgba(4, 18, 39, .9); font: 10px "DM Mono", monospace; text-align: center; }
 .crab-status { color: var(--muted); font: 10px "DM Mono", monospace; }
 .crab-card.selected .crab-status { color: var(--crab-color); }
 .crab-name { display: block; margin-top: 13px; font-size: 15px; font-weight: 700; }
@@ -168,11 +171,12 @@ h1 em { color: var(--coral); font-style: normal; }
 .race-lane { display: grid; grid-template-columns: 76px minmax(0, 1fr); align-items: center; gap: 9px; min-height: 63px; }
 .lane-meta { min-width: 0; }
 .lane-meta strong { display: block; overflow: hidden; font-size: 12px; text-overflow: ellipsis; white-space: nowrap; }
-.lane-meta span { display: block; margin-top: 4px; overflow: hidden; color: var(--muted); font: 10px "DM Mono", monospace; text-overflow: ellipsis; white-space: nowrap; }
+.lane-meta > span:not(.lane-number) { display: block; margin-top: 4px; overflow: hidden; color: var(--muted); font: 10px "DM Mono", monospace; text-overflow: ellipsis; white-space: nowrap; }
+.lane-number { display: block; margin-bottom: 1px; font: 9px "DM Mono", monospace; letter-spacing: .06em; }
 .lane-road { position: relative; height: 56px; border: 1px solid rgba(143, 179, 221, .13); border-radius: 11px; background: repeating-linear-gradient(135deg, rgba(255,255,255,.027) 0 9px, transparent 9px 18px), rgba(3, 16, 33, .63); overflow: hidden; }
 .lane-road::before { content: ""; position: absolute; inset: 50% 0 auto; height: 1px; background: rgba(255,255,255,.06); }
 .lane-road::after { content: ""; position: absolute; inset: 0; background: linear-gradient(90deg, rgba(7, 22, 42, .6), transparent 20%, transparent 82%, rgba(255, 110, 93, .05)); pointer-events: none; }
-.race-crab { position: absolute; top: 8px; left: 0; z-index: 2; font-size: 34px; line-height: 1; filter: drop-shadow(0 6px 6px rgba(0,0,0,.32)); transform: translateX(-50%); transition: left .12s linear; }
+.race-crab { position: absolute; top: 4px; left: 0; z-index: 2; width: 63px; height: 49px; line-height: 1; filter: drop-shadow(0 6px 6px rgba(0,0,0,.32)); transform: translateX(-50%); transition: left .12s linear; }
 .lane-event { position: absolute; top: 3px; left: 50%; z-index: 3; padding: 4px 7px; border-radius: 5px; color: #172238; background: var(--yellow); font: 10px "DM Mono", monospace; opacity: 0; transform: translate(-50%, -6px); transition: opacity .2s ease, transform .2s ease; }
 .lane-event.visible { opacity: 1; transform: translate(-50%, 0); }
 .lane-event.good { background: var(--aqua); }
@@ -185,11 +189,12 @@ h1 em { color: var(--coral); font-style: normal; }
 .legend-dot.event { background: var(--yellow); }
 
 .results-layout { display: grid; grid-template-columns: .9fr 1.1fr; gap: 20px; align-items: start; }
-.winner-card { position: relative; overflow: hidden; min-height: 330px; padding: 29px; border: 1px solid rgba(247, 200, 92, .42); border-radius: 19px; background: radial-gradient(circle at 100% 0%, rgba(247, 200, 92, .2), transparent 45%), linear-gradient(145deg, rgba(74, 65, 51, .72), rgba(18, 35, 58, .88)); box-shadow: var(--shadow); }
+.winner-card { position: relative; overflow: hidden; min-height: 330px; padding: 29px; border: 1px solid var(--crab-color, rgba(247, 200, 92, .42)); border-radius: 19px; background: radial-gradient(circle at 100% 0%, color-mix(in srgb, var(--crab-color, #f7c85c) 20%, transparent), transparent 45%), linear-gradient(145deg, rgba(74, 65, 51, .72), rgba(18, 35, 58, .88)); box-shadow: var(--shadow); }
 .winner-card::after { content: "✦"; position: absolute; right: 30px; top: 16px; color: var(--yellow); font-size: 85px; opacity: .26; }
 .winner-label { color: var(--yellow); font: 500 11px "DM Mono", monospace; letter-spacing: .14em; text-transform: uppercase; }
-.winner-emoji { display: block; margin-top: 27px; font-size: 68px; filter: drop-shadow(0 10px 13px rgba(0,0,0,.28)); }
+.winner-emoji { display: block; width: 170px; height: 145px; margin-top: 20px; filter: drop-shadow(0 10px 13px rgba(0,0,0,.28)); }
 .winner-card h2 { margin-top: 13px; font-size: 34px; letter-spacing: -.06em; }
+.winner-crab-number { display: block; width: fit-content; margin-top: 5px; padding: 4px 8px; border-radius: 6px; color: #172238; background: var(--crab-color, var(--yellow)); font: 500 11px "DM Mono", monospace; }
 .winner-owner { margin-top: 5px; color: var(--muted); font: 12px "DM Mono", monospace; }
 .results-side { display: grid; gap: 14px; }
 .results-table { padding: 20px; }
@@ -197,7 +202,7 @@ h1 em { color: var(--coral); font-style: normal; }
 .result-row:last-child { border-bottom: 0; }
 .rank { color: var(--muted-2); font: 11px "DM Mono", monospace; }
 .result-name { display: flex; align-items: center; gap: 8px; font-size: 13px; }
-.result-mini-crab { font-size: 19px; }
+.result-mini-crab { display: block; width: 28px; height: 25px; border-bottom: 2px solid var(--crab-color); }
 .result-owner { margin-top: 2px; color: var(--muted-2); font: 10px "DM Mono", monospace; }
 .finish-time { color: var(--muted); font: 11px "DM Mono", monospace; }
 .wins-card { display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 16px 19px; border: 1px solid rgba(101, 224, 209, .16); border-radius: 13px; background: rgba(101, 224, 209, .06); }
@@ -255,7 +260,7 @@ h1 em { color: var(--coral); font-style: normal; }
   .mini-lane { grid-template-columns: 66px 1fr 20px; gap: 6px; }
   .mini-name { font-size: 9px; }
   .mini-line { height: 27px; }
-  .mini-crab { top: -1px; font-size: 22px; }
+  .mini-crab { top: -1px; width: 33px; height: 28px; }
   .preview-caption { right: 17px; bottom: 17px; left: 17px; }
   .preview-caption strong { max-width: 180px; font-size: 19px; }
   .preview-caption span { font-size: 9px; }
@@ -271,7 +276,8 @@ h1 em { color: var(--coral); font-style: normal; }
   .crab-search { max-width: none; width: 100%; }
   .crab-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px; }
   .crab-card { min-height: 142px; padding: 13px; border-radius: 12px; }
-  .crab-emoji { font-size: 29px; }
+  .crab-emoji { width: 51px; height: 44px; }
+  .crab-number { left: 36px; min-width: 23px; padding: 3px 4px; font-size: 9px; }
   .crab-status { font-size: 8px; letter-spacing: -.02em; }
   .crab-name { margin-top: 12px; font-size: 14px; }
   .crab-personality { font-size: 10px; }
@@ -289,12 +295,13 @@ h1 em { color: var(--coral); font-style: normal; }
   .race-lanes { gap: 6px; margin-top: 27px; }
   .race-lane { grid-template-columns: 61px minmax(0, 1fr); gap: 6px; min-height: 55px; }
   .lane-meta strong { font-size: 10px; }
-  .lane-meta span { margin-top: 3px; font-size: 8px; }
+  .lane-meta > span:not(.lane-number) { margin-top: 3px; font-size: 8px; }
+  .lane-number { font-size: 8px; }
   .lane-road { height: 50px; border-radius: 9px; }
-  .race-crab { top: 7px; font-size: 28px; }
+  .race-crab { top: 4px; width: 56px; height: 44px; }
   .race-legend { align-items: flex-start; flex-direction: column; gap: 7px; margin-top: 14px; font-size: 9px; }
   .winner-card { min-height: 260px; padding: 23px; border-radius: 16px; }
-  .winner-emoji { margin-top: 20px; font-size: 58px; }
+  .winner-emoji { width: 140px; height: 118px; margin-top: 12px; }
   .winner-card h2 { font-size: 30px; }
   .results-table { padding: 16px; }
   .result-row { gap: 8px; padding: 10px 0; }

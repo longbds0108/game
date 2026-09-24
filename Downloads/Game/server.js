@@ -7,15 +7,15 @@ const PORT = Number(process.env.PORT || 4173);
 const ROOT = __dirname;
 const ROOM_SIZES = [6, 8, 16, 32, 64, 100];
 const CRAB_PRESETS = [
-  { id: "rocket", name: "Rocket", color: "#ff6e5d", emoji: "🦀" },
-  { id: "bubbles", name: "Bubbles", color: "#65c7ff", emoji: "🦀" },
-  { id: "lucky", name: "Lucky", color: "#71d49b", emoji: "🦀" },
-  { id: "goldie", name: "Goldie", color: "#f7c85c", emoji: "🦀" },
-  { id: "sleepy", name: "Sleepy", color: "#b887ff", emoji: "🦀" },
-  { id: "chaos", name: "Chaos", color: "#ff995a", emoji: "🦀" },
+  { id: "rocket", name: "Rocket", color: "#ff6e5d", emoji: "🦀", number: 1 },
+  { id: "bubbles", name: "Bubbles", color: "#65c7ff", emoji: "🦀", number: 2 },
+  { id: "lucky", name: "Lucky", color: "#71d49b", emoji: "🦀", number: 3 },
+  { id: "goldie", name: "Goldie", color: "#f7c85c", emoji: "🦀", number: 4 },
+  { id: "sleepy", name: "Sleepy", color: "#b887ff", emoji: "🦀", number: 5 },
+  { id: "chaos", name: "Chaos", color: "#ff995a", emoji: "🦀", number: 6 },
 ];
 const CRAB_COLORS = ["#65e0d1", "#ffb45c", "#ff7b87", "#8db8ff", "#c795ff", "#7de0a0", "#f3d36b", "#7ed7e8"];
-const CRABS = [...CRAB_PRESETS, ...Array.from({ length: 94 }, (_, index) => { const number = index + 7; return { id: `crab-${number}`, name: `Coral ${String(number).padStart(2, "0")}`, color: CRAB_COLORS[index % CRAB_COLORS.length], emoji: "🦀" }; })];
+const CRABS = [...CRAB_PRESETS, ...Array.from({ length: 94 }, (_, index) => { const number = index + 7; return { id: `crab-${number}`, name: `Coral ${String(number).padStart(2, "0")}`, color: CRAB_COLORS[index % CRAB_COLORS.length], emoji: "🦀", number }; })];
 const rooms = new Map();
 const subscribers = new Map();
 const now = () => Date.now();
