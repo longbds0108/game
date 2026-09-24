@@ -18,9 +18,11 @@ let crabSearch = "";
 let stream;
 let roomSyncTimer;
 let roomSyncInFlight = false;
+let roomSyncGeneration = 0;
+let roomSyncController;
 let raceAnimationFrame;
 let raceElements = new Map();
-let raceTrack = { road: null, crabWidth: 0, roadWidth: 0, travel: 0 };
+let raceTrack = { road: null, finishLine: null, crabWidth: 0, roadWidth: 0, travel: 0 };
 let raceClockSecond = -1;
 let raceCountdownSecond = -1;
 let raceDom = { countdown: null, countdownNumber: null, time: null };
@@ -33,7 +35,7 @@ const app = document.querySelector("#app");
 
 const englishReplacements = [
   ["DLICOM SOCIAL MODE", "DLICOM SOCIAL MODE"], ["DLICOM SOCIAL ARENA", "DLICOM SOCIAL ARENA"], ["Kết nối hội bạn.", "Connect your circle."], ["Chọn lane của bạn.", "Pick your lane."], ["Cùng chạy, cùng vui.", "Race together, have fun."], ["Top của room.", "Top of the room."], ["Tạo room Dlicom", "Create a Dlicom room"], ["Vào room", "Join a room"], ["Mở phòng →", "Open room →"], ["Tham gia", "Join"], ["Một mini-game cộng đồng cho phòng Dlicom. Mời hội bạn, chọn Dlicom và xem ai về nhất.", "A social mini-game for your Dlicom room. Invite friends, pick a Dlicom and see who wins."], ["Dán mã room để vào cùng hội bạn.", "Paste the room code to join your circle."], ["DLICOM RACE // LIVE", "DLICOM RACE // LIVE"], ["SOCIAL SPRINT", "SOCIAL SPRINT"], ["DLICOM ROOM · REALTIME", "DLICOM ROOM · REALTIME"], ["Chọn Dlicom cho room", "Choose a Dlicom for the room"], ["DLICOM SPRINT · LIVE", "DLICOM SPRINT · LIVE"], ["Cùng chạy, ", "Race together, "], ["Dlicom ơi!", "Dlicom, let's go!"], ["DLICOM ROOM · FINISH SYNCED", "DLICOM ROOM · FINISH SYNCED"], ["Top của room: ", "Room top finisher: "], ["race!", "race!"], ["ROOM CHAMPION", "ROOM CHAMPION"], ["Room finish order", "Room finish order"], ["Dlicom Race · quick rules", "Dlicom Race · quick rules"], ["DLICOM RACE là mini-game cộng đồng: chọn Dlicom, bật sẵn sàng và để room quyết định nhà vô địch.", "DLICOM RACE is a social mini-game: pick a Dlicom, get ready and let the room decide its champion."], ["Chọn Dlicom.", "Pick a Dlicom."], ["6–100 Dlicom", "6–100 Dlicom"], ["6–100 DLICOM / ROOM", "6–100 DLICOM / ROOM"], ["Tìm Dlicom theo tên", "Search Dlicom by name"], ["chưa chọn Dlicom", "no Dlicom yet"],
-  ["MÔ PHỎNG LOCAL", "LOCAL DEMO"], ["Trợ giúp", "Help"], ["Chọn ngôn ngữ", "Choose language"], ["BÃI BIỂN ĐANG MỞ CỬA", "THE BEACH IS OPEN"],
+  ["MÔ PHỎNG LOCAL", "LOCAL DEMO"], ["Trợ giúp", "Help"], ["Chọn ngôn ngữ", "Choose language"], ["BÃI BIỂN ĐANG MỞ CỬA", "THE BEACH IS OPEN"], ["CRAB RACE", "DLICOM RACE"],
   ["Chọn cua.", "Pick a crab."], ["Vào làn.", "Take a lane."], ["Đua thôi.", "Let's race."], ["Một cuộc đua vui nhộn cho hội bạn. Không cần kỹ năng, chỉ cần một biệt danh và một chút may mắn.", "A playful race for your friends. No skill required — just a nickname and a little luck."],
   ["Tạo phòng mới", "Create a room"], ["Bạn làm host. Gửi mã phòng cho mọi người cùng vào.", "You are the host. Share the room code with everyone."], ["Biệt danh của bạn", "Your nickname"], ["Số người tối đa", "Player limit"], ["6–100 cua", "6–100 crabs"], ["Tìm cua theo tên", "Search crabs by name"], ["người", "players"], ["Mở đường đua →", "Open the track →"],
   ["Vào phòng", "Join a room"], ["Đã có mã? Nhập vào đây để tham gia.", "Have a code? Enter it to join."], ["Biệt danh", "Nickname"], ["MÃ PHÒNG", "ROOM CODE"], ["Vào", "Join"], ["6 cua", "6 crabs"], ["0 áp lực", "zero pressure"], ["ĐƯỜNG ĐUA HÔM NAY", "TODAY'S TRACK"], ["SẮP BẮT ĐẦU", "STARTING SOON"], ["Ai sẽ là vua bãi biển?", "Who will rule the beach?"], ["20–30 GIÂY / TRẬN", "20–30 SEC / RACE"],
@@ -44,9 +46,19 @@ const englishReplacements = [
   ["Chọn Dlicom.", "Pick a Dlicom."], ["Đua thôi.", "Let's race."], ["Mở một room riêng và gửi mã cho hội bạn cùng vào.", "Open a private room and share the code with your circle."], ["realtime · vui cùng room", "realtime · fun with your room"], ["LIVE RACE BOARD", "LIVE RACE BOARD"], ["Server synced", "Server synced"], ["Ai sẽ là room", "Who will be the room"], ["Trong phòng", "In the room"], ["HOST A ROOM", "HOST A ROOM"], ["JOIN THE RACE", "JOIN THE RACE"], ["Realtime đa thiết bị", "Realtime on every device"], ["6–100 người", "6–100 players"], ["Không cần cài app", "No app required"], ["Không biết sợ", "Fearless"], ["Lướt như gió", "Moves like the wind"], ["Vận đỏ hôm nay", "Lucky today"], ["Tỏa sáng đúng lúc", "Shines at the right moment"], ["Chậm mà chắc", "Slow and steady"], ["Không đoán được", "Impossible to predict"], ["Sẵn sàng bứt phá", "Ready to burst ahead"], ["Kết nối bằng một lượt đua.", "Connect through one race."], ["Biệt danh cần từ 2–20 ký tự", "Nickname must be 2–20 characters"], ["Nhập biệt danh và mã phòng hợp lệ nhé", "Enter a valid nickname and room code"], ["Đã sao chép link mời phòng", "Room invite link copied"], ["Có lỗi kết nối", "Connection error"], ["Phòng không tồn tại hoặc đã hết hạn", "Room does not exist or has expired"], ["Phiên chơi không còn trong phòng", "This session is no longer in the room"], ["Phòng đã đủ", "Room is full"], ["Chỉ host mới có thể bắt đầu", "Only the host can start"], ["Chỉ host mới có thể đua lại", "Only the host can replay"], ["Phòng đang có cuộc đua", "A race is already in progress"], ["Không thể đổi Dlicom khi cuộc đua đang chạy", "You cannot change Dlicom during a race"], ["Dlicom không hợp lệ cho quy mô phòng này", "This Dlicom is not available for this room size"], ["Dlicom này đã có người chọn", "This Dlicom is already taken"], ["Hãy chọn Dlicom trước khi sẵn sàng", "Pick a Dlicom before getting ready"],
 ];
 
+const vietnameseReplacements = [
+  ["DLICOM SOCIAL MODE", "CHẾ ĐỘ XÃ HỘI DLICOM"], ["DLICOM SOCIAL ARENA", "ĐẤU TRƯỜNG DLICOM"], ["DLICOM RACE // LIVE", "DLICOM RACE // TRỰC TIẾP"], ["LIVE RACE BOARD", "BẢNG ĐUA TRỰC TIẾP"], ["SOCIAL SPRINT", "ĐUA CÙNG HỘI BẠN"], ["HOST A ROOM", "TẠO PHÒNG"], ["JOIN THE RACE", "THAM GIA ĐUA"], ["Server synced", "Máy chủ đã đồng bộ"], ["6–100 DLICOM / ROOM", "6–100 DLICOM / PHÒNG"], ["Pick your lane. Make it count.", "Chọn làn của bạn. Hãy bứt phá."], ["CRAB RACE", "DLICOM RACE"], ["Dlicom racer", "Nhân vật Dlicom"], ["realtime", "trực tuyến"], ["Realtime", "Trực tuyến"], ["REALTIME", "TRỰC TUYẾN"], ["online", "đang kết nối"], ["HOST", "CHỦ PHÒNG"], ["Host", "Chủ phòng"], ["host", "chủ phòng"], ["PLAYER", "NGƯỜI CHƠI"], ["BOTS", "BOT"], ["START", "BẮT ĐẦU"], ["FINISH", "ĐÍCH"], ["LIVE", "TRỰC TIẾP"], ["SERVER", "MÁY CHỦ"], ["SYNC", "ĐỒNG BỘ"], ["Room", "Phòng"], ["ROOM", "PHÒNG"], ["room", "phòng"],
+];
+
+const exactEnglishReplacements = [
+  ["Mở phòng riêng, chọn số người rồi gửi mã cho hội bạn.", "Open a private room, choose the player limit and share the code with your friends."],
+  ["Đã có mã phòng? Nhập vào để chạy cùng hội bạn.", "Have a room code? Enter it to race with your friends."],
+  ["MÃ ROOM", "ROOM CODE"], ["Mã room", "Room code"],
+];
+
 function translateValue(value) {
-  if (language === "vi") return value;
-  return englishReplacements.reduce((result, [from, to]) => result.split(from).join(to), value.replace(/Phòng đã đủ (\d+) người chơi/g, "Room is full: $1 players"));
+  const replacements = language === "vi" ? vietnameseReplacements : [...englishReplacements, ...exactEnglishReplacements];
+  return [...replacements].sort((a, b) => b[0].length - a[0].length).reduce((result, [from, to]) => result.split(from).join(to), value.replace(/Phòng đã đủ (\d+) người chơi/g, "Room is full: $1 players"));
 }
 
 function translateDocument() {
@@ -60,7 +72,7 @@ function translateDocument() {
 }
 
 const dlicomCopyReplacements = [
-  ["PHÒNG CHỜ · REALTIME", "DLICOM ROOM · REALTIME"], ["Chọn chiến mã.", "Chọn lane của bạn."], ["Chọn một chú cua", "Chọn Dlicom cho room"], ["ĐƯỜNG ĐUA ĐANG NÓNG · SERVER SYNC", "DLICOM SPRINT · LIVE"], ["Chạy đi, ", "Cùng chạy, "], ["cua ơi!", "Dlicom ơi!"], ["CỜ VỀ ĐÍCH ĐÃ HẠ · ĐỒNG BỘ XONG", "DLICOM ROOM · FINISH SYNCED"], ["Một màn ", "Top của room: "], ["kịch tính.", "race!"], ["VUA BÃI BIỂN", "ROOM CHAMPION"], ["Thứ tự về đích", "Room finish order"], ["Luật chơi siêu ngắn", "Dlicom Race · quick rules"], ["Chọn một chú cua, bật sẵn sàng rồi để các chú cua tự chạy. Các làn trống sẽ do BOT điều khiển. Trận đấu kết thúc sau khoảng 20–30 giây — cua về đích đầu tiên là người thắng.", "DLICOM RACE là mini-game cộng đồng: chọn Dlicom, bật sẵn sàng và để room quyết định nhà vô địch."], ["cua", "Dlicom"], ["Cua", "Dlicom"], ["CUA", "DLICOM"],
+  ["cua", "Dlicom"], ["Cua", "Dlicom"], ["CUA", "DLICOM"],
 ];
 
 function applyDlicomCopy() {
@@ -72,10 +84,11 @@ function applyDlicomCopy() {
 
 function updateChromeLanguage() {
   const connection = document.querySelector(".connection-pill");
-  const help = document.querySelector(".icon-button");
+  const help = document.querySelector("[data-action='help']");
   const languageControl = document.querySelector(".language-control");
   const brand = document.querySelector(".brand");
-  if (connection) connection.innerHTML = `<i></i> DLICOM SOCIAL MODE`;
+  document.title = language === "en" ? "Dlicom Race — Race with friends" : "Dlicom Race — Đua cùng hội bạn";
+  if (connection) connection.innerHTML = `<i></i> ${language === "en" ? "DLICOM SOCIAL MODE" : "CHẾ ĐỘ XÃ HỘI DLICOM"}`;
   if (help) help.setAttribute("aria-label", language === "en" ? "Help" : "Trợ giúp");
   if (languageControl) languageControl.setAttribute("aria-label", language === "en" ? "Choose language" : "Chọn ngôn ngữ");
   if (brand) brand.setAttribute("aria-label", language === "en" ? "Back to home" : "Về trang chủ");
@@ -148,17 +161,31 @@ function applySnapshot(payload, forceRender = false) {
   if (forceRender || previousScreen !== state.screen) render(); else if (state.screen === "race") updateRaceVisuals();
 }
 
-function connectStream() {
+function disconnectRoomSync() {
+  roomSyncGeneration += 1;
   if (stream) stream.close();
+  stream = null;
   clearInterval(roomSyncTimer);
+  roomSyncTimer = null;
+  roomSyncController?.abort();
+  roomSyncController = null;
+  roomSyncInFlight = false;
+}
+
+function connectStream() {
+  disconnectRoomSync();
+  const code = state.roomCode;
+  const session = state.sessionId;
+  const generation = roomSyncGeneration;
   if (location.protocol === "https:") {
-    const sync = async () => { if (roomSyncInFlight) return; roomSyncInFlight = true; try { applySnapshot(await api(`/api/rooms/${encodeURIComponent(state.roomCode)}?session=${encodeURIComponent(state.sessionId)}`)); } catch { /* retry on the next poll */ } finally { roomSyncInFlight = false; } };
+    roomSyncController = new AbortController();
+    const sync = async () => { if (roomSyncInFlight || generation !== roomSyncGeneration || state.roomCode !== code || state.sessionId !== session) return; roomSyncInFlight = true; try { const payload = await api(`/api/rooms/${encodeURIComponent(code)}?session=${encodeURIComponent(session)}`, { signal: roomSyncController.signal }); if (generation === roomSyncGeneration && state.roomCode === code && state.sessionId === session) applySnapshot(payload); } catch { /* retry on the next poll */ } finally { roomSyncInFlight = false; } };
     sync();
     roomSyncTimer = setInterval(sync, 1000);
     return;
   }
-  stream = new EventSource(`/api/stream?code=${encodeURIComponent(state.roomCode)}&session=${encodeURIComponent(state.sessionId)}`);
-  stream.onmessage = (event) => { try { applySnapshot(JSON.parse(event.data)); } catch { /* ignore malformed event */ } };
+  stream = new EventSource(`/api/stream?code=${encodeURIComponent(code)}&session=${encodeURIComponent(session)}`);
+  stream.onmessage = (event) => { if (generation !== roomSyncGeneration) return; try { applySnapshot(JSON.parse(event.data)); } catch { /* ignore malformed event */ } };
 }
 
 function render() {
@@ -166,15 +193,15 @@ function render() {
   raceAnimationFrame = null;
   if (state.screen !== "race") {
     raceElements.clear();
-    raceTrack = { road: null, crabWidth: 0, roadWidth: 0, travel: 0 };
+    raceTrack = { road: null, finishLine: null, crabWidth: 0, roadWidth: 0, travel: 0 };
     raceDom = { countdown: null, countdownNumber: null, time: null };
   }
   if (state.screen === "home") renderHome();
   if (state.screen === "lobby") renderLobby();
   if (state.screen === "race") { renderRace(); animateRace(); }
   if (state.screen === "results") renderResults();
-  applyDlicomCopy();
   translateDocument();
+  applyDlicomCopy();
   updateChromeLanguage();
 }
 
@@ -198,7 +225,7 @@ async function createRoom(event) {
 async function joinRoom(event) {
   event.preventDefault(); const nickname = document.querySelector("#join-name").value.trim(); const code = document.querySelector("#join-code").value.trim().toUpperCase();
   if (!validName(nickname) || code.length < 4) { toast("Nhập biệt danh và mã phòng hợp lệ nhé"); return; }
-  try { const payload = await api(`/api/rooms/${encodeURIComponent(code)}/join`, { method: "POST", body: { nickname, sessionId: state.sessionId || undefined } }); state.nickname = nickname; applySnapshot(payload, true); connectStream(); } catch (error) { toast(error.message); }
+  try { disconnectRoomSync(); const payload = await api(`/api/rooms/${encodeURIComponent(code)}/join`, { method: "POST", body: { nickname } }); state.nickname = nickname; applySnapshot(payload, true); connectStream(); } catch (error) { toast(error.message); }
 }
 
 function renderLobby() {
@@ -217,17 +244,17 @@ async function startRace() { try { applySnapshot(await api(`/api/rooms/${state.r
 async function resetRoom() { try { applySnapshot(await api(`/api/rooms/${state.roomCode}/reset`, { method: "POST", body: { sessionId: state.sessionId } }), true); } catch (error) { toast(error.message); } }
 async function copyRoom() { const share = `${location.origin}${location.pathname}#room/${state.roomCode}`; try { await navigator.clipboard.writeText(share); } catch { /* clipboard may be blocked */ } toast("Đã sao chép link mời phòng"); }
 
-function renderRace() { const lanes = state.room?.race?.lanes || []; app.innerHTML = `<section><div class="race-header"><div><div class="eyebrow">ĐƯỜNG ĐUA ĐANG NÓNG · SERVER SYNC</div><h1>Chạy đi, <em>cua ơi!</em></h1></div><div class="race-status"><span class="connection-pill"><i></i> ĐỒNG HỒ PHÒNG</span><b id="race-time">00:00</b></div></div><div class="race-panel"><div class="start-line"></div><div class="finish-line"></div><div class="finish-label">ĐÍCH</div><div class="race-lanes" id="race-lanes">${lanes.map((lane) => `<div class="race-lane" data-lane="${lane.id}"><div class="lane-meta"><span class="lane-number" style="color:${lane.color}">#${String(lane.number).padStart(2, "0")}</span><strong style="color:${lane.color}">${lane.name}</strong><span>${escapeHtml(lane.owner)}</span></div><div class="lane-road" style="--crab-color:${lane.color}"><span class="race-crab" id="crab-${lane.id}">${crabImage(lane.name)}</span><span class="lane-event" id="event-${lane.id}"></span></div></div>`).join("")}</div><div class="race-legend"><span class="legend-item"><i class="legend-dot"></i> trạng thái từ server</span><span class="legend-item"><i class="legend-dot event"></i> sự kiện bất ngờ</span></div><div class="countdown" id="countdown"><div class="countdown-number" id="countdown-number">3</div></div></div></section>`; raceElements = new Map(lanes.map((lane) => { const element = document.querySelector(`#crab-${lane.id}`); return [lane.id, { element, road: element?.parentElement }]; })); const firstLane = raceElements.values().next().value; raceTrack = { road: firstLane?.road || null, crabWidth: firstLane?.element?.offsetWidth || 0, roadWidth: 0, travel: 0 }; raceDom = { countdown: document.querySelector("#countdown"), countdownNumber: document.querySelector("#countdown-number"), time: document.querySelector("#race-time") }; raceClockSecond = -1; raceCountdownSecond = -1; }
+function renderRace() { const lanes = state.room?.race?.lanes || []; app.innerHTML = `<section><div class="race-header"><div><div class="eyebrow">ĐƯỜNG ĐUA ĐANG NÓNG · SERVER SYNC</div><h1>Chạy đi, <em>cua ơi!</em></h1></div><div class="race-status"><span class="connection-pill"><i></i> ĐỒNG HỒ PHÒNG</span><b id="race-time">00:00</b></div></div><div class="race-panel"><div class="start-line"></div><div class="finish-line"></div><div class="finish-label">ĐÍCH</div><div class="race-lanes" id="race-lanes">${lanes.map((lane) => `<div class="race-lane" data-lane="${lane.id}"><div class="lane-meta"><span class="lane-number" style="color:${lane.color}">#${String(lane.number).padStart(2, "0")}</span><strong style="color:${lane.color}">${lane.name}</strong><span>${escapeHtml(lane.owner)}</span></div><div class="lane-road" style="--crab-color:${lane.color}"><span class="race-crab" id="crab-${lane.id}">${crabImage(lane.name)}</span><span class="lane-event" id="event-${lane.id}"></span></div></div>`).join("")}</div><div class="race-legend"><span class="legend-item"><i class="legend-dot"></i> trạng thái từ server</span><span class="legend-item"><i class="legend-dot event"></i> sự kiện bất ngờ</span></div><div class="countdown" id="countdown"><div class="countdown-number" id="countdown-number">3</div></div></div></section>`; raceElements = new Map(lanes.map((lane) => { const element = document.querySelector(`#crab-${lane.id}`); return [lane.id, { element, road: element?.parentElement }]; })); const firstLane = raceElements.values().next().value; raceTrack = { road: firstLane?.road || null, finishLine: document.querySelector(".finish-line"), crabWidth: firstLane?.element?.offsetWidth || 0, roadWidth: 0, travel: 0 }; raceDom = { countdown: document.querySelector("#countdown"), countdownNumber: document.querySelector("#countdown-number"), time: document.querySelector("#race-time") }; raceClockSecond = -1; raceCountdownSecond = -1; }
 
 function animateRace() { updateRaceVisuals(); if (state.screen === "race") raceAnimationFrame = requestAnimationFrame(animateRace); }
 
-function updateRaceVisuals() { const race = state.room?.race; if (!race) return; const { countdown, countdownNumber, time } = raceDom; const elapsed = Date.now() - race.startedAt; const seconds = Math.min(22, Math.max(0, Math.floor(elapsed / 1000))); if (time && seconds !== raceClockSecond) { time.textContent = `00:${String(seconds).padStart(2, "0")}`; raceClockSecond = seconds; } const isCountdown = state.room.phase === "countdown"; const countdownDisplay = isCountdown ? "grid" : "none"; if (countdown && countdown.style.display !== countdownDisplay) countdown.style.display = countdownDisplay; if (countdownNumber && isCountdown) { const number = Math.max(1, Math.ceil((race.startedAt - Date.now()) / 1000)); if (number !== raceCountdownSecond) { countdownNumber.textContent = number; raceCountdownSecond = number; } } if (raceTrack.road && raceTrack.road.clientWidth !== raceTrack.roadWidth) { raceTrack.roadWidth = raceTrack.road.clientWidth; raceTrack.travel = Math.max(0, raceTrack.roadWidth - raceTrack.crabWidth); } race.lanes.forEach((lane) => { const element = raceElements.get(lane.id)?.element; if (!element) return; const t = Math.max(0, Math.min(1, elapsed / race.duration)); const wave = Number.isFinite(lane.wobble) ? Math.sin(elapsed / 820 + lane.wobble) * 0.018 : 0; const surge = Number.isFinite(lane.laneIndex) && Math.sin(elapsed / 1700 + lane.laneIndex) > 0.73 ? 0.018 : 0; const setback = Number.isFinite(lane.wobble) && Math.sin(elapsed / 1250 + lane.wobble) < -0.94 ? 0.014 : 0; const progress = isCountdown ? 0 : Number.isFinite(lane.factor) ? Math.max(0, Math.min(.94, t * lane.factor + wave + surge - setback)) : Math.max(0, Math.min(.94, Number(lane.progress) || 0)); element.style.transform = `translate3d(${progress * raceTrack.travel}px, 0, 0) translateX(-50%)`; }); }
+function updateRaceVisuals() { const race = state.room?.race; if (!race) return; const { countdown, countdownNumber, time } = raceDom; const elapsed = Date.now() - race.startedAt; const seconds = Math.min(22, Math.max(0, Math.floor(elapsed / 1000))); if (time && seconds !== raceClockSecond) { time.textContent = `00:${String(seconds).padStart(2, "0")}`; raceClockSecond = seconds; } const isCountdown = state.room.phase === "countdown"; const countdownDisplay = isCountdown ? "grid" : "none"; if (countdown && countdown.style.display !== countdownDisplay) countdown.style.display = countdownDisplay; if (countdownNumber && isCountdown) { const number = Math.max(1, Math.ceil((race.startedAt - Date.now()) / 1000)); if (number !== raceCountdownSecond) { countdownNumber.textContent = number; raceCountdownSecond = number; } } if (raceTrack.road && raceTrack.road.clientWidth !== raceTrack.roadWidth) { raceTrack.roadWidth = raceTrack.road.clientWidth; const roadBounds = raceTrack.road.getBoundingClientRect(); const finishBounds = raceTrack.finishLine?.getBoundingClientRect(); const finishInset = finishBounds ? Math.max(0, roadBounds.right - finishBounds.left) : raceTrack.crabWidth / 2; raceTrack.travel = Math.max(0, (roadBounds.width - finishInset - raceTrack.crabWidth / 2) / .94); } race.lanes.forEach((lane) => { const element = raceElements.get(lane.id)?.element; if (!element) return; const t = Math.max(0, Math.min(1, elapsed / race.duration)); const wave = Number.isFinite(lane.wobble) ? Math.sin(elapsed / 820 + lane.wobble) * 0.018 : 0; const surge = Number.isFinite(lane.laneIndex) && Math.sin(elapsed / 1700 + lane.laneIndex) > 0.73 ? 0.018 : 0; const setback = Number.isFinite(lane.wobble) && Math.sin(elapsed / 1250 + lane.wobble) < -0.94 ? 0.014 : 0; const progress = isCountdown ? 0 : Number.isFinite(lane.factor) ? Math.max(0, Math.min(.94, t * lane.factor + wave + surge - setback)) : Math.max(0, Math.min(.94, Number(lane.progress) || 0)); element.style.transform = `translate3d(${progress * raceTrack.travel}px, 0, 0) translateX(-50%)`; }); }
 
 function renderResults() { const lanes = state.room?.race?.lanes || []; const winner = lanes[0] || crab(state.selectedCrab); const wins = state.room?.wins?.[state.nickname] || 0; app.innerHTML = `<section><div class="screen-header"><div><div class="eyebrow">CỜ VỀ ĐÍCH ĐÃ HẠ · ĐỒNG BỘ XONG</div><h1>Một màn <em>kịch tính.</em></h1></div><div class="room-badge"><span>MÃ PHÒNG</span><strong>${escapeHtml(state.roomCode)}</strong><button class="copy-button" data-action="copy">Sao chép</button></div></div><div class="results-layout"><div class="winner-card" style="--crab-color:${winner.color}"><span class="winner-label">🏆 VUA BÃI BIỂN</span><span class="winner-emoji">${crabImage(winner.name)}</span><span class="winner-crab-number">#${String(winner.number).padStart(2, "0")}</span><h2>${winner.name}</h2><p class="winner-owner">Về nhất cho ${escapeHtml(winner.owner)}</p></div><div class="results-side"><section class="panel results-table"><div class="panel-title"><h2>Thứ tự về đích</h2><span>${lanes.length} cua</span></div>${lanes.map((lane, index) => `<div class="result-row"><span class="rank">${String(index + 1).padStart(2, "0")}</span><div><div class="result-name"><span class="result-mini-crab" style="--crab-color:${lane.color}">${crabImage(lane.name)}</span><strong>#${String(lane.number).padStart(2, "0")} ${lane.name}</strong></div><div class="result-owner">${escapeHtml(lane.owner)}</div></div><span class="finish-time">00:${String(Math.floor((lane.finishTime || 22000) / 1000)).padStart(2, "0")}</span></div>`).join("")}</section><div class="wins-card"><span>Thắng của ${escapeHtml(state.nickname)} trong phòng</span><strong>${wins}</strong></div><div class="results-actions"><button class="secondary-button" data-action="lobby">Đổi cua</button>${state.isHost ? `<button class="primary-button" data-action="replay">Đua lại →</button>` : `<button class="secondary-button" disabled>Chờ host đua lại</button>`}</div></div></div></section>`; document.querySelector("[data-action='copy']").addEventListener("click", copyRoom); document.querySelector("[data-action='lobby']").addEventListener("click", resetRoom); document.querySelector("[data-action='replay']")?.addEventListener("click", resetRoom); }
 
 function toast(message) { const element = document.querySelector("#toast"); element.textContent = translateValue(message); element.classList.add("show"); clearTimeout(toastTimer); toastTimer = setTimeout(() => element.classList.remove("show"), 2600); }
 document.addEventListener("pointerdown", () => { if (audioEnabled) startMusic(); }, { passive: true });
-document.addEventListener("click", (event) => { const action = event.target.closest("[data-action]")?.dataset.action; if (action === "audio-toggle") { audioEnabled = !audioEnabled; localStorage.setItem("dlicom-audio", audioEnabled ? "on" : "off"); if (audioEnabled) { startMusic(); playTone(660, .08, "sine", .03); } else stopMusic(); updateAudioControl(); } if (action === "home") { if (stream) stream.close(); clearInterval(roomSyncTimer); state = { ...defaultState }; persist(); render(); } if (action === "help") { app.innerHTML = `<div class="help-popover"><div class="eyebrow">CRAB RACE</div><h2>Luật chơi siêu ngắn</h2><p>Chọn một chú cua, bật sẵn sàng rồi để các chú cua tự chạy. Các làn trống sẽ do BOT điều khiển. Trận đấu kết thúc sau khoảng 20–30 giây — cua về đích đầu tiên là người thắng.</p><button class="secondary-button" data-action="home">Về trang đầu</button></div>`; applyDlicomCopy(); translateDocument(); updateChromeLanguage(); } });
+document.addEventListener("click", (event) => { const action = event.target.closest("[data-action]")?.dataset.action; if (action === "audio-toggle") { audioEnabled = !audioEnabled; localStorage.setItem("dlicom-audio", audioEnabled ? "on" : "off"); if (audioEnabled) { startMusic(); playTone(660, .08, "sine", .03); } else stopMusic(); updateAudioControl(); } if (action === "home") { disconnectRoomSync(); state = { ...defaultState }; persist(); render(); } if (action === "help") { app.innerHTML = `<div class="help-popover"><div class="eyebrow">CRAB RACE</div><h2>Luật chơi siêu ngắn</h2><p>Chọn một chú cua, bật sẵn sàng rồi để các chú cua tự chạy. Các làn trống sẽ do BOT điều khiển. Trận đấu kết thúc sau khoảng 20–30 giây — cua về đích đầu tiên là người thắng.</p><button class="secondary-button" data-action="home">Về trang đầu</button></div>`; translateDocument(); applyDlicomCopy(); updateChromeLanguage(); } });
 
 const languageSelect = document.querySelector("#language-select");
 languageSelect.value = language;
