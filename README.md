@@ -26,4 +26,4 @@ Chạy `node server.js`, sau đó mở `http://localhost:4173` trên các thiế
 
 Import repository này vào Vercel và dùng cấu hình mặc định: không cần build command, không cần output directory. Vercel sẽ phục vụ các file giao diện ở root và route API qua `api/[...path].js`.
 
-Lưu ý: state phòng hiện vẫn lưu trong RAM của serverless function. Bản deploy phù hợp để demo/test; nếu cần nhiều phòng và realtime ổn định production, cần nối thêm một database hoặc Redis dùng chung.
+Khi Vercel có các biến `UPSTASH_REDIS_REST_URL` và `UPSTASH_REDIS_REST_TOKEN` (hoặc `KV_REST_API_URL` và `KV_REST_API_TOKEN`), state phòng sẽ được lưu vào Redis dùng chung. Nếu chạy localhost không có các biến này, app tự dùng RAM để test nhanh.

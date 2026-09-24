@@ -20,25 +20,48 @@ const runtime = globalThis.__DLICOM_GAME_RUNTIME__ || { rooms: new Map(), subscr
 globalThis.__DLICOM_GAME_RUNTIME__ = runtime;
 const rooms = runtime.rooms;
 const subscribers = runtime.subscribers;
+const redisUrl = process.env.UPSTASH_REDIS_REST_URL || process.env.KV_REST_API_URL;
+const redisToken = process.env.UPSTASH_REDIS_REST_TOKEN || process.env.KV_REST_API_TOKEN;
+const redisEnabled = Boolean(redisUrl && redisToken);
 const now = () => Date.now();
 const makeId = (bytes = 8) => crypto.randomBytes(bytes).toString("hex");
 const makeCode = () => crypto.randomBytes(3).toString("hex").toUpperCase();
 const clamp = (value, min, max) => Math.max(min, Math.min(max, value));
 const cleanName = (value) => String(value || "").trim().slice(0, 20);
-const getRoom = (code) => rooms.get(String(code || "").toUpperCase());
 const getPlayer = (room, sessionId) => room?.players.find((player) => player.sessionId === sessionId);
+const roomKey = (code) => `dlicom-race:room:${String(code || "").toUpperCase()}`;
+
+async function redisCommand(command) {
+  const response = await fetch(redisUrl, { method: "POST", headers: { authorization: `Bearer ${redisToken}`, "content-type": "application/json" }, body: JSON.stringify(command) });
+  if (!response.ok) throw new Error(`Redis request failed (${response.status})`);
+  const payload = await response.json();
+  return payload.result;
+}
+
+async function loadRoom(code) {
+  const normalized = String(code || "").toUpperCase();
+  if (!redisEnabled) return rooms.get(normalized);
+  const value = await redisCommand(["GET", roomKey(normalized)]);
+  if (!value) return null;
+  return typeof value === "string" ? JSON.parse(value) : value;
+}
+
+async function saveRoom(room) {
+  if (redisEnabled) { await redisCommand(["SET", roomKey(room.code), JSON.stringify(room), "EX", "3600"]); return; }
+  rooms.set(room.code, room);
+}
 
 function sendJson(res, status, payload) { res.writeHead(status, { "content-type": "application/json; charset=utf-8", "cache-control": "no-store" }); res.end(JSON.stringify(payload)); }
 function sendError(res, status, message) { sendJson(res, status, { error: message }); }
 async function readJson(req) { let raw = ""; for await (const chunk of req) raw += chunk; try { return raw ? JSON.parse(raw) : {}; } catch { return {}; } }
 
-function createRoom(nickname, requestedMaxPlayers = 6) {
-  let code = makeCode(); while (rooms.has(code)) code = makeCode();
+async function createRoom(nickname, requestedMaxPlayers = 6) {
+  let code = makeCode(); while (await loadRoom(code)) code = makeCode();
   const sessionId = makeId(12);
   const parsedMaxPlayers = Number(requestedMaxPlayers);
   const maxPlayers = ROOM_SIZES.includes(parsedMaxPlayers) ? parsedMaxPlayers : 6;
   const room = { code, maxPlayers, hostSessionId: sessionId, phase: "lobby", createdAt: now(), lastActivity: now(), players: [{ sessionId, nickname, crab: "rocket", ready: false, joinedAt: now(), online: true }], race: null, wins: {} };
-  rooms.set(code, room); return { room, sessionId };
+  await saveRoom(room); return { room, sessionId };
 }
 
 function snapshot(room, sessionId) {
@@ -74,8 +97,8 @@ function updateRace(room) {
 
 function tickRooms() { for (const room of rooms.values()) { if (room.phase === "countdown" || room.phase === "racing") updateRace(room); if (now() - room.lastActivity > 60 * 60 * 1000) rooms.delete(room.code); } }
 
-function subscribe(req, res, code, sessionId) {
-  const room = getRoom(code); const player = getPlayer(room, sessionId);
+async function subscribe(req, res, code, sessionId) {
+  const room = await loadRoom(code); const player = getPlayer(room, sessionId);
   if (!room || !player) { sendError(res, 404, "Phòng không tồn tại hoặc phiên đã hết hạn"); return; }
   player.online = true; res.writeHead(200, { "content-type": "text/event-stream; charset=utf-8", "cache-control": "no-cache", connection: "keep-alive" }); res.write(`data: ${JSON.stringify(snapshot(room, sessionId))}\n\n`);
   const set = subscribers.get(room.code) || new Set(); const subscriber = { res, sessionId }; set.add(subscriber); subscribers.set(room.code, set);
@@ -91,18 +114,19 @@ function serveStatic(req, res) {
 async function requestHandler(req, res) {
   tickRooms();
   const parsed = new URL(req.url, `http://${req.headers.host}`); const parts = parsed.pathname.split("/").filter(Boolean);
-  if (req.method === "GET" && parts[0] === "api" && parts[1] === "stream") { subscribe(req, res, parsed.searchParams.get("code"), parsed.searchParams.get("session")); return; }
+  if (req.method === "GET" && parts[0] === "api" && parts[1] === "stream") { await subscribe(req, res, parsed.searchParams.get("code"), parsed.searchParams.get("session")); return; }
   if (parts[0] === "api" && parts[1] === "rooms") {
     const code = parts[2]?.toUpperCase(); const action = parts[3]; const body = req.method === "POST" ? await readJson(req) : {};
-    if (req.method === "POST" && !code) { const nickname = cleanName(body.nickname); if (nickname.length < 2) { sendError(res, 400, "Biệt danh cần từ 2–20 ký tự"); return; } const created = createRoom(nickname, body.maxPlayers); sendJson(res, 201, snapshot(created.room, created.sessionId)); return; }
-    const room = getRoom(code); if (!room) { sendError(res, 404, "Phòng không tồn tại hoặc đã hết hạn"); return; }
+    if (req.method === "POST" && !code) { const nickname = cleanName(body.nickname); if (nickname.length < 2) { sendError(res, 400, "Biệt danh cần từ 2–20 ký tự"); return; } const created = await createRoom(nickname, body.maxPlayers); sendJson(res, 201, snapshot(created.room, created.sessionId)); return; }
+    const room = await loadRoom(code); if (!room) { sendError(res, 404, "Phòng không tồn tại hoặc đã hết hạn"); return; }
+    if (room.phase === "countdown" || room.phase === "racing") { updateRace(room); await saveRoom(room); }
     if (req.method === "GET" && !action) { const sessionId = parsed.searchParams.get("session"); if (!getPlayer(room, sessionId)) { sendError(res, 403, "Phiên chơi không còn trong phòng"); return; } sendJson(res, 200, snapshot(room, sessionId)); return; }
-    if (req.method === "POST" && action === "join") { const nickname = cleanName(body.nickname); if (nickname.length < 2) { sendError(res, 400, "Biệt danh cần từ 2–20 ký tự"); return; } if (room.players.length >= room.maxPlayers && !getPlayer(room, body.sessionId)) { sendError(res, 409, `Phòng đã đủ ${room.maxPlayers} người chơi`); return; } const sessionId = body.sessionId || makeId(12); let player = getPlayer(room, sessionId); if (!player) { player = { sessionId, nickname, crab: null, ready: false, joinedAt: now(), online: true }; room.players.push(player); } else { player.nickname = nickname; player.online = true; } broadcast(room); sendJson(res, 200, snapshot(room, sessionId)); return; }
+    if (req.method === "POST" && action === "join") { const nickname = cleanName(body.nickname); if (nickname.length < 2) { sendError(res, 400, "Biệt danh cần từ 2–20 ký tự"); return; } if (room.players.length >= room.maxPlayers && !getPlayer(room, body.sessionId)) { sendError(res, 409, `Phòng đã đủ ${room.maxPlayers} người chơi`); return; } const sessionId = body.sessionId || makeId(12); let player = getPlayer(room, sessionId); if (!player) { player = { sessionId, nickname, crab: null, ready: false, joinedAt: now(), online: true }; room.players.push(player); } else { player.nickname = nickname; player.online = true; } broadcast(room); await saveRoom(room); sendJson(res, 200, snapshot(room, sessionId)); return; }
     const sessionId = body.sessionId || parsed.searchParams.get("session"); const player = getPlayer(room, sessionId); if (!player) { sendError(res, 403, "Phiên chơi không còn trong phòng"); return; } player.online = true;
-    if (req.method === "POST" && action === "select") { if (room.phase !== "lobby") { sendError(res, 409, "Không thể đổi Dlicom khi cuộc đua đang chạy"); return; } const selected = CRABS.slice(0, room.maxPlayers).find((item) => item.id === body.crab); if (!selected) { sendError(res, 400, "Dlicom không hợp lệ cho quy mô phòng này"); return; } if (room.players.some((item) => item.sessionId !== sessionId && item.crab === selected.id)) { sendError(res, 409, "Dlicom này đã có người chọn"); return; } player.crab = selected.id; player.ready = false; broadcast(room); sendJson(res, 200, snapshot(room, sessionId)); return; }
-    if (req.method === "POST" && action === "ready") { if (room.phase !== "lobby" || !player.crab) { sendError(res, 409, "Hãy chọn Dlicom trước khi sẵn sàng"); return; } player.ready = !player.ready; broadcast(room); sendJson(res, 200, snapshot(room, sessionId)); return; }
-    if (req.method === "POST" && action === "start") { if (room.hostSessionId !== sessionId) { sendError(res, 403, "Chỉ host mới có thể bắt đầu"); return; } if (room.phase !== "lobby") { sendError(res, 409, "Phòng đang có cuộc đua"); return; } const error = startRace(room); if (error) { sendError(res, 409, error); return; } sendJson(res, 200, snapshot(room, sessionId)); return; }
-    if (req.method === "POST" && action === "reset") { if (room.hostSessionId !== sessionId) { sendError(res, 403, "Chỉ host mới có thể đua lại"); return; } room.phase = "lobby"; room.race = null; room.players.forEach((item) => { item.ready = false; item.crab = null; }); broadcast(room); sendJson(res, 200, snapshot(room, sessionId)); return; }
+    if (req.method === "POST" && action === "select") { if (room.phase !== "lobby") { sendError(res, 409, "Không thể đổi Dlicom khi cuộc đua đang chạy"); return; } const selected = CRABS.slice(0, room.maxPlayers).find((item) => item.id === body.crab); if (!selected) { sendError(res, 400, "Dlicom không hợp lệ cho quy mô phòng này"); return; } if (room.players.some((item) => item.sessionId !== sessionId && item.crab === selected.id)) { sendError(res, 409, "Dlicom này đã có người chọn"); return; } player.crab = selected.id; player.ready = false; broadcast(room); await saveRoom(room); sendJson(res, 200, snapshot(room, sessionId)); return; }
+    if (req.method === "POST" && action === "ready") { if (room.phase !== "lobby" || !player.crab) { sendError(res, 409, "Hãy chọn Dlicom trước khi sẵn sàng"); return; } player.ready = !player.ready; broadcast(room); await saveRoom(room); sendJson(res, 200, snapshot(room, sessionId)); return; }
+    if (req.method === "POST" && action === "start") { if (room.hostSessionId !== sessionId) { sendError(res, 403, "Chỉ host mới có thể bắt đầu"); return; } if (room.phase !== "lobby") { sendError(res, 409, "Phòng đang có cuộc đua"); return; } const error = startRace(room); if (error) { sendError(res, 409, error); return; } await saveRoom(room); sendJson(res, 200, snapshot(room, sessionId)); return; }
+    if (req.method === "POST" && action === "reset") { if (room.hostSessionId !== sessionId) { sendError(res, 403, "Chỉ host mới có thể đua lại"); return; } room.phase = "lobby"; room.race = null; room.players.forEach((item) => { item.ready = false; item.crab = null; }); broadcast(room); await saveRoom(room); sendJson(res, 200, snapshot(room, sessionId)); return; }
   }
   serveStatic(req, res);
 }
