@@ -62,7 +62,7 @@ function updateChromeLanguage() {
   const connection = document.querySelector(".connection-pill");
   const help = document.querySelector(".icon-button");
   const languageControl = document.querySelector(".language-control");
-  if (connection) connection.innerHTML = `<i></i> DEAPP SOCIAL MODE`;
+  if (connection) connection.innerHTML = `<i></i> DLICOM SOCIAL MODE`;
   if (help) help.setAttribute("aria-label", language === "en" ? "Help" : "Trợ giúp");
   if (languageControl) languageControl.setAttribute("aria-label", language === "en" ? "Choose language" : "Chọn ngôn ngữ");
 }
