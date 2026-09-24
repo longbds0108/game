@@ -94,7 +94,7 @@ h1 em { color: var(--coral); font-style: normal; }
 .microcopy { margin-top: 18px; color: var(--muted-2); font: 11px "DM Mono", monospace; }
 .microcopy strong { color: var(--aqua); font-weight: 500; }
 
-.track-preview { position: relative; min-height: 550px; padding: 28px; border: 1px solid rgba(123, 156, 255, .28); border-radius: 30px; background: radial-gradient(circle at 76% 18%, rgba(123, 156, 255, .13), transparent 22rem), linear-gradient(145deg, rgba(15, 47, 82, .98), rgba(5, 22, 46, .98)); box-shadow: 0 30px 90px rgba(0, 0, 0, .3), inset 0 1px 0 rgba(255, 255, 255, .06); overflow: hidden; }
+.track-preview { position: relative; min-height: 550px; padding: 28px; border: 1px solid rgba(123, 156, 255, .38); border-radius: 30px; background: radial-gradient(circle at 76% 18%, rgba(123, 156, 255, .22), transparent 22rem), linear-gradient(145deg, rgba(27, 70, 112, .98), rgba(8, 36, 70, .98)); box-shadow: 0 30px 90px rgba(0, 0, 0, .25), inset 0 1px 0 rgba(255, 255, 255, .09); overflow: hidden; }
 .track-preview::before { content: ""; position: absolute; inset: 0; opacity: .44; background: linear-gradient(115deg, transparent 0 36%, rgba(123, 156, 255, .08) 36.2%, transparent 36.5%), linear-gradient(90deg, transparent 0 68%, rgba(101, 224, 209, .08) 68.2%, transparent 68.5%); pointer-events: none; }
 .preview-orbit { position: absolute; right: -150px; top: -185px; width: 470px; height: 470px; border: 1px solid rgba(101, 224, 209, .2); border-radius: 50%; box-shadow: 0 0 0 44px rgba(101, 224, 209, .025), 0 0 0 88px rgba(101, 224, 209, .02); pointer-events: none; }
 .preview-top { display: flex; align-items: end; justify-content: space-between; position: relative; z-index: 1; gap: 16px; }
@@ -109,13 +109,13 @@ h1 em { color: var(--coral); font-style: normal; }
 .mini-name { display: flex; align-items: center; gap: 6px; min-width: 0; color: var(--muted); font: 10px "DM Mono", monospace; text-transform: uppercase; }
 .mini-name strong { overflow: hidden; color: var(--ink); font: 600 11px "Space Grotesk", sans-serif; text-overflow: ellipsis; white-space: nowrap; }
 .mini-rank { color: var(--lane-color); font-weight: 600; }
-.mini-line { position: relative; height: 42px; border: 1px solid color-mix(in srgb, var(--lane-color) 32%, rgba(143, 179, 221, .16)); border-radius: 12px; background: repeating-linear-gradient(135deg, rgba(255,255,255,.035) 0 10px, transparent 10px 20px), rgba(3, 16, 33, .72); box-shadow: inset 0 0 18px rgba(0, 0, 0, .18), 0 7px 18px rgba(0, 0, 0, .1); overflow: hidden; }
+.mini-line { position: relative; height: 42px; border: 1px solid color-mix(in srgb, var(--lane-color) 40%, rgba(180, 215, 255, .22)); border-radius: 12px; background: repeating-linear-gradient(135deg, rgba(255,255,255,.065) 0 10px, transparent 10px 20px), rgba(12, 43, 75, .82); box-shadow: inset 0 0 18px rgba(0, 0, 0, .13), 0 7px 18px rgba(0, 0, 0, .1); overflow: hidden; }
 .mini-line::before { content: ""; position: absolute; inset: 0 0 0 0; border-left: 2px solid var(--lane-color); opacity: .32; }
 .mini-line::after { content: ""; position: absolute; right: 13px; top: 5px; bottom: 5px; width: 6px; border-left: 2px solid rgba(255,255,255,.7); border-right: 2px solid rgba(255,255,255,.7); background: repeating-linear-gradient(180deg, rgba(255,255,255,.7) 0 4px, transparent 4px 8px); opacity: .42; }
 .track-start, .track-finish { position: absolute; top: 50%; z-index: 1; color: var(--muted-2); font: 8px "DM Mono", monospace; letter-spacing: .08em; transform: translateY(-50%); }
 .track-start { left: 9px; opacity: .66; }
 .track-finish { right: 25px; opacity: .66; }
-.mini-crab { position: absolute; left: var(--pos); top: 1px; z-index: 2; width: 49px; height: 39px; padding: 2px; border: 1px solid color-mix(in srgb, var(--lane-color) 68%, transparent); border-radius: 10px; background: rgba(8, 22, 43, .78); box-shadow: 0 0 20px color-mix(in srgb, var(--lane-color) 28%, transparent); transition: left 1s ease; transform: translateX(-50%); animation: preview-bob 1.7s ease-in-out infinite alternate; }
+.mini-crab { position: absolute; left: var(--pos); top: 1px; z-index: 2; width: 49px; height: 39px; padding: 0; border: 0; border-radius: 10px; background: transparent; filter: drop-shadow(0 6px 7px color-mix(in srgb, var(--lane-color) 42%, rgba(0, 0, 0, .3))); transition: left 1s ease; transform: translateX(-50%); animation: preview-bob 1.7s ease-in-out infinite alternate; }
 .mini-crab img, .crab-emoji img, .race-crab img, .result-mini-crab img, .winner-emoji img { display: block; width: 100%; height: 100%; object-fit: contain; }
 .mini-number { min-width: 28px; padding: 5px 4px; border: 1px solid rgba(143, 179, 221, .14); border-radius: 7px; color: var(--muted); background: rgba(4, 17, 36, .42); font: 600 10px "DM Mono", monospace; text-align: center; }
 .preview-stats { position: absolute; right: 28px; bottom: 87px; left: 28px; display: flex; justify-content: space-between; gap: 12px; padding-top: 13px; border-top: 1px solid rgba(143, 179, 221, .12); color: var(--muted); font: 10px "DM Mono", monospace; letter-spacing: .04em; }
@@ -179,7 +179,7 @@ h1 em { color: var(--coral); font-style: normal; }
 .race-header h1 { font-size: clamp(31px, 5vw, 52px); }
 .race-status { display: flex; align-items: center; gap: 10px; color: var(--muted); font: 11px "DM Mono", monospace; }
 .race-status b { color: var(--aqua); font-weight: 500; }
-.race-panel { position: relative; overflow: hidden; padding: 18px 18px 20px; border: 1px solid var(--line); border-radius: 20px; background: linear-gradient(150deg, rgba(15, 45, 78, .9), rgba(5, 21, 42, .94)); box-shadow: var(--shadow); }
+.race-panel { position: relative; overflow: hidden; padding: 18px 18px 20px; border: 1px solid rgba(123, 156, 255, .3); border-radius: 20px; background: radial-gradient(circle at 88% 0%, rgba(101, 224, 209, .12), transparent 24rem), linear-gradient(150deg, rgba(29, 72, 112, .96), rgba(8, 35, 66, .98)); box-shadow: var(--shadow); }
 .start-line, .finish-line { position: absolute; top: 70px; bottom: 30px; width: 2px; z-index: 4; border-left: 2px dashed rgba(255,255,255,.25); }
 .start-line { left: 100px; }
 .finish-line { right: 49px; border-color: var(--coral); box-shadow: 0 0 16px rgba(255, 110, 93, .48); }
@@ -190,9 +190,9 @@ h1 em { color: var(--coral); font-style: normal; }
 .lane-meta strong { display: block; overflow: hidden; font-size: 12px; text-overflow: ellipsis; white-space: nowrap; }
 .lane-meta > span:not(.lane-number) { display: block; margin-top: 4px; overflow: hidden; color: var(--muted); font: 10px "DM Mono", monospace; text-overflow: ellipsis; white-space: nowrap; }
 .lane-number { display: block; margin-bottom: 1px; font: 9px "DM Mono", monospace; letter-spacing: .06em; }
-.lane-road { position: relative; height: 56px; border: 1px solid rgba(143, 179, 221, .13); border-radius: 11px; background: repeating-linear-gradient(135deg, rgba(255,255,255,.027) 0 9px, transparent 9px 18px), rgba(3, 16, 33, .63); overflow: hidden; }
-.lane-road::before { content: ""; position: absolute; inset: 50% 0 auto; height: 1px; background: rgba(255,255,255,.06); }
-.lane-road::after { content: ""; position: absolute; inset: 0; background: linear-gradient(90deg, rgba(7, 22, 42, .6), transparent 20%, transparent 82%, rgba(255, 110, 93, .05)); pointer-events: none; }
+.lane-road { position: relative; height: 56px; border: 1px solid rgba(171, 211, 255, .25); border-radius: 11px; background: repeating-linear-gradient(135deg, rgba(255,255,255,.065) 0 9px, transparent 9px 18px), rgba(12, 43, 75, .82); box-shadow: inset 0 0 20px rgba(0, 0, 0, .12); overflow: hidden; }
+.lane-road::before { content: ""; position: absolute; inset: 50% 0 auto; height: 1px; background: rgba(255,255,255,.12); }
+.lane-road::after { content: ""; position: absolute; inset: 0; background: linear-gradient(90deg, rgba(11, 39, 70, .28), transparent 20%, transparent 82%, rgba(255, 140, 180, .1)); pointer-events: none; }
 .race-crab { position: absolute; top: 4px; left: 0; z-index: 2; width: 63px; height: 49px; line-height: 1; filter: drop-shadow(0 6px 6px rgba(0,0,0,.32)); transform: translateX(-50%); transition: left .12s linear; }
 .lane-event { position: absolute; top: 3px; left: 50%; z-index: 3; padding: 4px 7px; border-radius: 5px; color: #172238; background: var(--yellow); font: 10px "DM Mono", monospace; opacity: 0; transform: translate(-50%, -6px); transition: opacity .2s ease, transform .2s ease; }
 .lane-event.visible { opacity: 1; transform: translate(-50%, 0); }
